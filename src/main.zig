@@ -27,7 +27,7 @@ pub fn main(_: std.process.Init) !void {
     while (node != null) : (node = node.*.next) {
         const casted: *c.alpm_pkg_t = @ptrCast(@alignCast(node.*.data));
         const package = init_package(casted);
-        log.debug(format.auto(Package), .{package});
+        log.debug(format.auto(Package), package);
     }
 }
 
