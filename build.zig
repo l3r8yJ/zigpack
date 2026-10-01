@@ -119,6 +119,14 @@ pub fn build(b: *std.Build) void {
         run_cmd.addArgs(args);
     }
 
+    const fmt_module_tests = b.addTest(.{ .root_module = b.createModule(.{
+        .root_source_file = b.path("src/fmts/tests.zig"),
+        .target = target,
+        .optimize = optimize,
+    }) });
+
+    const run_fmt_tests = b.addRunArtifact(fmt_module_tests);
+
     // Creates an executable that will run `test` blocks from the provided module.
     // Here `mod` needs to define a target, which is why earlier we made sure to
     // set the releative field.
@@ -145,6 +153,7 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_mod_tests.step);
     test_step.dependOn(&run_exe_tests.step);
+    test_step.dependOn(&run_fmt_tests.step);
 
     // Just like flags, top level steps are also listed in the `--help` menu.
     //

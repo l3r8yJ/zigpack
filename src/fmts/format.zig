@@ -1,0 +1,54 @@
+const std = @import("std");
+
+pub fn auto(comptime T: type) []const u8 {
+    comptime var result: []const u8 = "." ++ @typeName(T) ++ " {{\n";
+    inline for (std.meta.fields(T)) |field| {
+        result = result ++
+            "." ++ field.name ++
+            " = " ++ fmt_by_type(field.type) ++
+            ",\n";
+    }
+    result = result ++ "}}\n";
+    return result;
+}
+
+fn fmt_by_type(comptime T: type) []const u8 {
+    if (T == []const u8 or T == []u8) {
+        return "{s}";
+    }
+    return switch (@typeInfo(T)) {
+        .int, .comptime_int, .float, .comptime_float => "{d}",
+        .bool => "{}",
+        .@"enum" => "{s}",
+        .pointer => "{*}",
+        else => "{any}",
+    };
+}
+
+test "correctly picks format by type" {
+    const enum_t = enum { one, two };
+    const struct_t = struct { name: []const u8 };
+    const pointer_t = &enum_t.one;
+    const cases = .{
+        TestCase(type, []const u8){ .input = i32, .expected = "{d}" },
+        TestCase(type, []const u8){ .input = i64, .expected = "{d}" },
+        TestCase(type, []const u8){ .input = f128, .expected = "{d}" },
+        TestCase(type, []const u8){ .input = bool, .expected = "{}" },
+        TestCase(type, []const u8){ .input = struct_t, .expected = "{any}" },
+        TestCase(type, []const u8){ .input = enum_t, .expected = "{s}" },
+        TestCase(type, []const u8){ .input = @TypeOf(pointer_t), .expected = "{*}" },
+    };
+    inline for (cases) |case| {
+        try std.testing.expectEqualStrings(
+            case.expected,
+            fmt_by_type(case.input),
+        );
+    }
+}
+
+fn TestCase(comptime I: type, comptime E: type) type {
+    return struct {
+        input: I,
+        expected: E,
+    };
+}
