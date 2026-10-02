@@ -1,5 +1,25 @@
 const std = @import("std");
 
+/// Automatically builds format for any structure.
+///
+/// Example:
+/// ```
+/// const Drink = struct {
+///    name: []const u8,
+///    volume: f16,
+///    alcohol: bool,
+///    container: Container,
+/// };
+/// ```
+/// Format will be generated like this:
+/// ```
+/// .format.Drink {{
+///     .name = {s},
+///     .volume = {d},
+///     .alcohol = {},
+///     .container = {},
+/// }}
+/// ```
 pub fn auto(comptime T: type) []const u8 {
     comptime var result: []const u8 = "." ++ @typeName(T) ++ " {{\n";
     inline for (std.meta.fields(T)) |field| {
@@ -47,11 +67,6 @@ test "builds auto format correctly" {
         \\}}
         \\
     ;
-    const beer = Drink{ .name = "Beer", .volume = 0.5, .container = .GlassBottle, .alcohol = true };
-    std.log.info(
-        auto(Drink),
-        beer,
-    );
     try std.testing.expectEqualStrings(expected_format, auto(Drink));
 }
 

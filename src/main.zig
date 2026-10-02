@@ -33,8 +33,12 @@ pub fn main(_: std.process.Init) !void {
 
 const Package = struct {
     name: []const u8,
+    size: i64,
 };
 
 fn init_package(src: *c.alpm_pkg_t) Package {
-    return .{ .name = std.mem.span(c.alpm_pkg_get_name(src)) };
+    return .{
+        .name = std.mem.span(c.alpm_pkg_get_name(src)),
+        .size = @intCast(c.alpm_pkg_get_isize(src)),
+    };
 }
