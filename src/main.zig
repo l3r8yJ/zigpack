@@ -24,11 +24,17 @@ pub fn main(_: std.process.Init) !void {
     };
     const installed = c.alpm_db_get_pkgcache(local_db);
     var node = installed;
+    const allocator = std.heap.smp_allocator;
+    var packages: std.ArrayList(Package) = .empty;
+    defer packages.deinit(allocator);
     while (node != null) : (node = node.*.next) {
         const casted: *c.alpm_pkg_t = @ptrCast(@alignCast(node.*.data));
         const package = init_package(casted);
+        try packages.append(allocator, package);
         log.debug(format.auto(Package), package);
     }
+    // TODO: write an universal format generator for collections
+    log.debug("{any}\n", .{packages.items});
 }
 
 const Package = struct {
